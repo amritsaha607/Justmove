@@ -4,21 +4,24 @@ const videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const controlsElement = document.getElementsByClassName('control-panel')[0];
 const canvasCtx = canvasElement.getContext('2d');
+canvasCtx.font = "50px Comic Sans MS";
 
-var WIDTH=1280, HEIGHT=720;
+
+var WIDTH = 1280, HEIGHT = 720;
 
 // Moving rectangle positions
-var curx = 0, endx = WIDTH, cury=20,
-    rect_w=50, rect_h=20,
-    speed=20, color='#f00';
+var curx = 0, endx = WIDTH, cury = 20,
+  rect_w = 50, rect_h = 20,
+  speed = 20, color = '#f00';
+var cur_score = 0,
+    scoreDiv = document.getElementById("id_score");
 
 // We'll add this to our control panel later, but we'll save it here so we can
 // call tick() each time the graph runs.
 const fpsControl = new FPS();
-var a = 0;
 
 function distance(p1, p2) {
-  return ((p1.x-p2.x)**2 + (p1.y-p2.y)**2) ** 0.5;
+  return ((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2) ** 0.5;
 }
 
 // Optimization: Turn off animated spinner after its hiding animation is done.
@@ -83,11 +86,10 @@ function onResults(results) {
 
   if (true) {
     var nose = results.poseLandmarks[0],
-        left_eye = results.poseLandmarks[7],
-        right_eye = results.poseLandmarks[8];
+      left_eye = results.poseLandmarks[7],
+      right_eye = results.poseLandmarks[8];
     var head_x = nose.x,
-        head_y = nose.y - 3*(distance(nose, left_eye)+distance(nose, right_eye))/2;
-    a += 1;
+      head_y = nose.y - 3 * (distance(nose, left_eye) + distance(nose, right_eye)) / 2;
 
     var head = {
       'x': head_x,
@@ -101,14 +103,42 @@ function onResults(results) {
       [head],
       { visibilityMin: 0.65, color: zColor, fillColor: '#AAAAAA' });
 
-    if (curx + rect_w < WIDTH) {curx += speed;}
+    if (curx + rect_w < WIDTH) { curx += speed; }
     else {
       curx = 0;
       cury = 10 + Math.random() * HEIGHT / 2;
       color = Math.random() > 0.5 ? '#f00' : '#0f0';
     }
-    drawRectangle(canvasCtx, curx, cury, rect_w, rect_h, color=color);
+    drawRectangle(canvasCtx, curx, cury, rect_w, rect_h, color = color);
 
+    if (color == '#f00' || color == '#0f0') {
+      var head_x_abs = head_x * WIDTH,
+        head_y_abs = head_y * HEIGHT;
+      
+      // Check if rectangle is in head range
+      if (curx - rect_w / 2 <= head_x_abs && curx + rect_w / 2 >= head_x_abs) {
+        // If red, don't touch it
+        if (color == '#f00') {
+          // Not touching
+          if (cury < head_y_abs) {
+            score();
+          }
+          // Touching
+          else {
+            uhoh();
+          }
+        }
+        // If green, smash
+        else {
+          if (cury >= head_y_abs) {
+            score();
+          }
+          else {
+            uhoh();
+          }
+        }
+      }
+    }
   }
 }
 
@@ -165,8 +195,33 @@ new ControlPanel(controlsElement, {
   });
 
 
-function drawRectangle(ctx, x, y, w, h, color='#000') {
+function drawRectangle(ctx, x, y, w, h, color = '#000') {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
 }
 
+function switchColor() {
+  if (color == '#0f0') {
+    color = '#f00';
+  } else {
+    color = '#0f0';
+  }
+}
+function changeColor(col) {
+  color = col;
+}
+
+function setScore () {
+  scoreDiv.innerHTML = 'Score : ' + cur_score;
+}
+
+function score() {
+  cur_score += 1;
+  setScore();
+  changeColor('#fff');
+}
+function uhoh() {
+  cur_score -= 1;
+  setScore();
+  changeColor('#000');
+}

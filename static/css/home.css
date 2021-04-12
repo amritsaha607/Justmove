@@ -119,3 +119,10 @@
     position: absolute;
   }
   
+  #id_score {
+    text-align: center;
+    z-index: 2;
+    color: #596e73;
+    font-family: "Lucida Console", "Courier New", monospace;
+    font-size: 30px;
+  }
