@@ -120,7 +120,7 @@ function onResults(results) {
         // If red, don't touch it
         if (color == '#f00') {
           // Not touching
-          if (cury < head_y_abs) {
+          if (cury - rect_h/2 < head_y_abs) {
             score();
           }
           // Touching
@@ -130,7 +130,7 @@ function onResults(results) {
         }
         // If green, smash
         else {
-          if (cury >= head_y_abs) {
+          if (cury - rect_h/2 >= head_y_abs) {
             score();
           }
           else {
