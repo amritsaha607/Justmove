@@ -10,6 +10,10 @@ const canvasCtx = canvasElement.getContext('2d');
 const fpsControl = new FPS();
 var a = 0;
 
+function distance(p1, p2) {
+  return ((p1.x-p2.x)**2 + (p1.y-p2.y)**2) ** 0.5;
+}
+
 // Optimization: Turn off animated spinner after its hiding animation is done.
 const spinner = document.querySelector('.loading');
 spinner.ontransitionend = () => {
@@ -33,48 +37,65 @@ function onResults(results) {
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   canvasCtx.drawImage(
     results.image, 0, 0, canvasElement.width, canvasElement.height);
-  drawConnectors(
-    canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
-    visibilityMin: 0.65,
-    color: (data) => {
-      const x0 = canvasElement.width * data.from.x;
-      const y0 = canvasElement.height * data.from.y;
-      const x1 = canvasElement.width * data.to.x;
-      const y1 = canvasElement.height * data.to.y;
+  // drawConnectors(
+  //   canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
+  //   visibilityMin: 0.65,
+  //   color: (data) => {
+  //     const x0 = canvasElement.width * data.from.x;
+  //     const y0 = canvasElement.height * data.from.y;
+  //     const x1 = canvasElement.width * data.to.x;
+  //     const y1 = canvasElement.height * data.to.y;
 
-      const z0 = clamp(data.from.z + 0.5, 0, 1);
-      const z1 = clamp(data.to.z + 0.5, 0, 1);
+  //     const z0 = clamp(data.from.z + 0.5, 0, 1);
+  //     const z1 = clamp(data.to.z + 0.5, 0, 1);
 
-      const gradient = canvasCtx.createLinearGradient(x0, y0, x1, y1);
-      gradient.addColorStop(
-        0, `rgba(0, ${255 * z0}, ${255 * (1 - z0)}, 1)`);
-      gradient.addColorStop(
-        1.0, `rgba(0, ${255 * z1}, ${255 * (1 - z1)}, 1)`);
-      return gradient;
-    }
-  });
-  drawLandmarks(
-    canvasCtx,
-    Object.values(POSE_LANDMARKS_LEFT)
-      .map(index => results.poseLandmarks[index]),
-    { visibilityMin: 0.65, color: zColor, fillColor: '#FF0000' });
-  drawLandmarks(
-    canvasCtx,
-    Object.values(POSE_LANDMARKS_RIGHT)
-      .map(index => results.poseLandmarks[index]),
-    { visibilityMin: 0.65, color: zColor, fillColor: '#00FF00' });
-  drawLandmarks(
-    canvasCtx,
-    Object.values(POSE_LANDMARKS_NEUTRAL)
-      .map(index => results.poseLandmarks[index]),
-    { visibilityMin: 0.65, color: zColor, fillColor: '#AAAAAA' });
+  //     const gradient = canvasCtx.createLinearGradient(x0, y0, x1, y1);
+  //     gradient.addColorStop(
+  //       0, `rgba(0, ${255 * z0}, ${255 * (1 - z0)}, 1)`);
+  //     gradient.addColorStop(
+  //       1.0, `rgba(0, ${255 * z1}, ${255 * (1 - z1)}, 1)`);
+  //     return gradient;
+  //   }
+  // });
+  // drawLandmarks(
+  //   canvasCtx,
+  //   Object.values(POSE_LANDMARKS_LEFT)
+  //     .map(index => results.poseLandmarks[index]),
+  //   { visibilityMin: 0.65, color: zColor, fillColor: '#FF0000' });
+  // drawLandmarks(
+  //   canvasCtx,
+  //   Object.values(POSE_LANDMARKS_RIGHT)
+  //     .map(index => results.poseLandmarks[index]),
+  //   { visibilityMin: 0.65, color: zColor, fillColor: '#00FF00' });
+  // drawLandmarks(
+  //   canvasCtx,
+  //   Object.values(POSE_LANDMARKS_NEUTRAL)
+  //     .map(index => results.poseLandmarks[index]),
+  //   { visibilityMin: 0.65, color: zColor, fillColor: '#AAAAAA' });
   canvasCtx.restore();
 
-  if (a<1) {
-    console.log(POSE_LANDMARKS_NEUTRAL);
-    console.log(POSE_LANDMARKS_LEFT);
-    console.log(POSE_LANDMARKS_RIGHT);
+  if (a<10000000000) {
+    var nose = results.poseLandmarks[0],
+        left_eye = results.poseLandmarks[7],
+        right_eye = results.poseLandmarks[8];
+    var head_x = nose.x,
+        head_y = nose.y - 3*(distance(nose, left_eye)+distance(nose, right_eye))/2;
     a += 1;
+
+    var head = {
+      'x': head_x,
+      'y': head_y,
+      'z': 0,
+      'visibility': 1,
+    };
+
+    // console.log(Object.values(POSE_LANDMARKS_NEUTRAL).map(index => results.poseLandmarks[index]));
+    // console.log([head]);
+
+    drawLandmarks(
+      canvasCtx,
+      [head],
+      { visibilityMin: 0.65, color: zColor, fillColor: '#AAAAAA' });
   }
 }
 
