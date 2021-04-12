@@ -1,0 +1,1 @@
+web: gunicorn Justmove.wsgi --log-file -
