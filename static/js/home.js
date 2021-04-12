@@ -5,6 +5,13 @@ const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const controlsElement = document.getElementsByClassName('control-panel')[0];
 const canvasCtx = canvasElement.getContext('2d');
 
+var WIDTH=1280, HEIGHT=720;
+
+// Moving rectangle positions
+var curx = 0, endx = WIDTH, cury=20,
+    rect_w=50, rect_h=20,
+    speed=20, color='#f00';
+
 // We'll add this to our control panel later, but we'll save it here so we can
 // call tick() each time the graph runs.
 const fpsControl = new FPS();
@@ -74,7 +81,7 @@ function onResults(results) {
   //   { visibilityMin: 0.65, color: zColor, fillColor: '#AAAAAA' });
   canvasCtx.restore();
 
-  if (a<10000000000) {
+  if (true) {
     var nose = results.poseLandmarks[0],
         left_eye = results.poseLandmarks[7],
         right_eye = results.poseLandmarks[8];
@@ -89,13 +96,19 @@ function onResults(results) {
       'visibility': 1,
     };
 
-    // console.log(Object.values(POSE_LANDMARKS_NEUTRAL).map(index => results.poseLandmarks[index]));
-    // console.log([head]);
-
     drawLandmarks(
       canvasCtx,
       [head],
       { visibilityMin: 0.65, color: zColor, fillColor: '#AAAAAA' });
+
+    if (curx + rect_w < WIDTH) {curx += speed;}
+    else {
+      curx = 0;
+      cury = 10 + Math.random() * HEIGHT / 2;
+      color = Math.random() > 0.5 ? '#f00' : '#0f0';
+    }
+    drawRectangle(canvasCtx, curx, cury, rect_w, rect_h, color=color);
+
   }
 }
 
@@ -113,8 +126,8 @@ const camera = new Camera(videoElement, {
   onFrame: async () => {
     await pose.send({ image: videoElement });
   },
-  width: 1280,
-  height: 720
+  width: WIDTH,
+  height: HEIGHT
 });
 camera.start();
 
@@ -150,3 +163,10 @@ new ControlPanel(controlsElement, {
     videoElement.classList.toggle('selfie', options.selfieMode);
     pose.setOptions(options);
   });
+
+
+function drawRectangle(ctx, x, y, w, h, color='#000') {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
